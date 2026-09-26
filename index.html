@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Для тебя 🍁</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* --- ОБЩИЕ СТИЛИ И ОСЕННИЙ ФОН --- */
         body {
@@ -32,28 +33,72 @@
             100% { transform: translateY(110vh) rotate(360deg); }
         }
 
+        /* --- БОКОВЫЕ ФОТО (выезжают при скролле) --- */
+        .side-photo {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%) translateX(0);
+            width: 160px;
+            background: #fff;
+            padding: 8px 8px 30px 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-radius: 2px;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            pointer-events: none;
+        }
+        .side-photo img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            display: block;
+            border-radius: 2px;
+        }
+        .side-photo.left {
+            left: -200px;
+            transform: translateY(-50%) rotate(-6deg);
+        }
+        .side-photo.right {
+            right: -200px;
+            transform: translateY(-50%) rotate(6deg);
+        }
+        .side-photo.show {
+            opacity: 0.85;
+        }
+        .side-photo.left.show {
+            left: 20px;
+        }
+        .side-photo.right.show {
+            right: 20px;
+        }
+
         /* --- МУЗЫКА --- */
         .music-btn {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.85);
             border: 2px solid #b07d4b;
-            border-radius: 50%;
-            width: 50px;
+            border-radius: 25px;
             height: 50px;
-            font-size: 24px;
+            padding: 0 22px;
+            font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
             backdrop-filter: blur(5px);
+            font-family: 'Georgia', serif;
+            color: #6b4423;
+            font-weight: bold;
+            white-space: nowrap;
         }
         .music-btn:hover {
-            background: rgba(255, 255, 255, 0.95);
-            transform: scale(1.1);
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
         }
 
         /* --- ЗАГОЛОВОК --- */
@@ -69,34 +114,47 @@
             text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
             margin: 0;
         }
-        header p {
-            font-size: 1.2em;
-            color: #8b5a2b;
-            font-style: italic;
-        }
 
-        /* --- ФОТОГРАФИИ --- */
+        /* --- ФОТОГРАФИИ (галерея) --- */
         .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1100px;
+            margin: 30px auto 60px;
+            padding: 0 20px;
             position: relative;
-            width: 100%;
-            height: 600px;
             z-index: 5;
         }
         .photo {
-            position: absolute;
             background: #fff;
-            padding: 10px 10px 40px 10px;
+            padding: 12px 12px 45px 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             transition: transform 0.3s;
             border-radius: 2px;
+            cursor: pointer;
         }
+        /* Порядок в галерее:
+           1 = фото1 (Моё счастье) — слева сверху
+           2 = фото5 (Она же будет моей женой) — по центру сверху
+           3 = фото2 (Тёплые моменты) — справа сверху
+           4 = фото4 (Мой мир) — слева снизу
+           5 = фото3 (Люблю тебя) — по центру снизу
+        */
+        .photo:nth-child(1) { transform: rotate(-6deg); }
+        .photo:nth-child(2) { transform: rotate(3deg); }
+        .photo:nth-child(3) { transform: rotate(-4deg); }
+        .photo:nth-child(4) { transform: rotate(5deg); }
+        .photo:nth-child(5) { transform: rotate(-3deg); }
+
         .photo:hover {
-            transform: scale(1.1) rotate(0deg) !important;
+            transform: rotate(0deg) scale(1.05);
             z-index: 10;
         }
         .photo img {
             width: 100%;
-            height: auto;
+            height: 260px;
+            object-fit: cover;
             display: block;
             border-radius: 2px;
         }
@@ -108,27 +166,50 @@
             font-size: 1.1em;
         }
 
-        /* Позиции для 3 фото (можно менять) */
-        .photo-1 {
+        /* --- ЛАЙТБОКС --- */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            cursor: zoom-out;
+        }
+        .lightbox.show {
+            display: flex;
+        }
+        .lightbox img {
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 8px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.6);
+            animation: zoomIn 0.3s ease;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .lightbox-close {
+            position: absolute;
             top: 20px;
-            left: 5%;
-            width: 260px;
-            transform: rotate(-8deg);
-            z-index: 3;
+            right: 30px;
+            font-size: 40px;
+            color: white;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: Arial, sans-serif;
+            line-height: 1;
         }
-        .photo-2 {
-            top: 150px;
-            right: 8%;
-            width: 280px;
-            transform: rotate(6deg);
-            z-index: 4;
-        }
-        .photo-3 {
-            top: 320px;
-            left: 25%;
-            width: 250px;
-            transform: rotate(-4deg);
-            z-index: 2;
+        .lightbox-close:hover {
+            transform: scale(1.2);
         }
 
         /* --- МАГАЗИН ПОДАРКОВ --- */
@@ -166,7 +247,6 @@
             font-size: 1.3em;
         }
 
-        /* Сетка товаров */
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -218,6 +298,9 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+        }
+        .buy-btn.bought {
+            background: linear-gradient(135deg, #7cb342, #558b2f);
         }
 
         /* --- БЛОК ЗАРАБОТКА БАЛЛОВ --- */
@@ -272,6 +355,329 @@
             cursor: not-allowed;
         }
 
+        /* --- КОРЗИНА --- */
+        .cart {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            width: 260px;
+            max-height: 70vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(107, 68, 35, 0.3);
+            z-index: 50;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border: 2px solid #d4a373;
+            transition: transform 0.3s;
+        }
+        .cart.collapsed {
+            transform: translateX(calc(100% + 30px));
+        }
+        .cart h3 {
+            margin: 0 0 10px;
+            color: #6b4423;
+            text-align: center;
+            border-bottom: 2px dashed #b07d4b;
+            padding-bottom: 8px;
+            font-size: 1.2em;
+            cursor: pointer;
+            user-select: none;
+        }
+        .cart h3:hover {
+            color: #8b5a2b;
+        }
+        .cart-empty {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 15px 0;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 6px 0;
+            background: #fff8f0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            border-left: 4px solid #7cb342;
+        }
+        .cart-item .cart-item-name {
+            flex: 1;
+            color: #4a3728;
+        }
+        .cart-item .cart-item-price {
+            color: #b22222;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+        .cart-total {
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px dashed #b07d4b;
+            font-weight: bold;
+            color: #6b4423;
+            font-size: 1em;
+        }
+
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, #b22222, #8b0000);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Georgia', serif;
+        }
+        .checkout-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #8b0000, #660000);
+            transform: scale(1.03);
+        }
+        .checkout-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cart-toggle {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 51;
+            background: #8b5a2b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            display: none;
+        }
+        .cart-toggle:hover {
+            background: #6b4423;
+            transform: scale(1.1);
+        }
+        .cart-toggle.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #b22222;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* --- МОДАЛКА С БИЛЕТОМ --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            max-height: 95vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .modal-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s;
+        }
+        .modal-btn.download {
+            background: linear-gradient(135deg, #7cb342, #558b2f);
+            color: white;
+        }
+        .modal-btn.download:hover {
+            background: linear-gradient(135deg, #558b2f, #33691e);
+            transform: scale(1.03);
+        }
+        .modal-btn.close {
+            background: #8b5a2b;
+            color: white;
+        }
+        .modal-btn.close:hover {
+            background: #6b4423;
+            transform: scale(1.03);
+        }
+
+        /* --- БИЛЕТ --- */
+        .ticket {
+            width: 420px;
+            max-width: 100%;
+            background: linear-gradient(135deg, #fff8f0 0%, #fdf0e0 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.4);
+            position: relative;
+            border: 3px dashed #b07d4b;
+            font-family: 'Georgia', serif;
+            color: #4a3728;
+        }
+        .ticket::before,
+        .ticket::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .ticket::before { left: -17px; }
+        .ticket::after { right: -17px; }
+
+        .ticket-header {
+            text-align: center;
+            border-bottom: 2px dashed #b07d4b;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .ticket-header h2 {
+            margin: 0;
+            color: #6b4423;
+            font-size: 1.8em;
+        }
+        .ticket-header p {
+            margin: 5px 0 0;
+            color: #8b5a2b;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+
+        .ticket-section {
+            margin: 12px 0;
+        }
+        .ticket-section-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #6b4423;
+            background: rgba(212, 163, 115, 0.25);
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            text-align: center;
+            border: 1px dashed #b07d4b;
+        }
+        .ticket-items {
+            margin: 5px 0;
+        }
+        .ticket-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 8px;
+            border-left: 4px solid #7cb342;
+            font-size: 0.95em;
+        }
+        .ticket-item .t-name {
+            flex: 1;
+            color: #4a3728;
+        }
+        .ticket-item .t-price {
+            color: #b22222;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .ticket-empty-line {
+            text-align: center;
+            color: #b8a48c;
+            font-style: italic;
+            font-size: 0.9em;
+            padding: 6px 0;
+        }
+
+        .ticket-total {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #6b4423;
+            border-top: 2px dashed #b07d4b;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+        .ticket-total span {
+            color: #b22222;
+            font-size: 1.3em;
+        }
+
+        .ticket-footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 2px dashed #b07d4b;
+            color: #8b5a2b;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        .ticket-footer .heart {
+            font-size: 1.5em;
+            display: block;
+            margin: 5px 0;
+        }
+
+        .ticket-empty {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 20px 0;
+        }
+
         /* --- УВЕДОМЛЕНИЕ --- */
         .toast {
             position: fixed;
@@ -284,7 +690,7 @@
             border-radius: 10px;
             font-size: 1.1em;
             transition: transform 0.4s;
-            z-index: 1000;
+            z-index: 3000;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
         .toast.show {
@@ -293,44 +699,105 @@
 
         /* --- АДАПТИВ ДЛЯ ТЕЛЕФОНА --- */
         @media (max-width: 768px) {
-            header h1 { font-size: 2em; }
-            .gallery { height: 500px; }
-            .photo-1 { width: 180px; left: 2%; }
-            .photo-2 { width: 190px; right: 2%; }
-            .photo-3 { width: 170px; left: 15%; top: 280px; }
+            header h1 { font-size: 1.8em; }
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+                margin: 20px auto 40px;
+            }
+            .photo:nth-child(5) { grid-column: 1 / 3; }
+            .photo img {
+                height: 180px;
+            }
             .shop, .earn-section { margin: 20px 10px; padding: 20px; }
             .items-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .cart {
+                width: 220px;
+                top: 80px;
+                right: 10px;
+            }
+            .ticket {
+                padding: 20px;
+            }
+            .ticket-header h2 { font-size: 1.4em; }
+            .music-btn {
+                height: 42px;
+                padding: 0 14px;
+                font-size: 13px;
+                top: 10px;
+                right: 10px;
+            }
+            /* Скрываем боковые фото на телефоне, чтобы не мешали */
+            .side-photo {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- МУЗЫКА: файл music.mp3 должен лежать рядом с index.html -->
+    <!-- БОКОВЫЕ ФОТО (появляются при скролле) -->
+    <div class="side-photo left" id="sideLeft">
+        <img src="photo1.jpg" alt="">
+    </div>
+    <div class="side-photo right" id="sideRight">
+        <img src="photo2.jpg" alt="">
+    </div>
+
+    <!-- МУЗЫКА -->
     <audio id="bgMusic" loop>
         <source src="music.mp3" type="audio/mpeg">
     </audio>
-    <button class="music-btn" id="musicBtn" title="Включить/выключить музыку">🎵</button>
+    <button class="music-btn" id="musicBtn" title="Включить музыку">Включить музыку</button>
 
-    <!-- ЗАГОЛОВОК -->
+    <!-- КОРЗИНА -->
+    <button class="cart-toggle" id="cartToggle" title="Открыть корзину">
+        🛒<span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+    </button>
+    <div class="cart" id="cart">
+        <h3 id="cartHeader">🛒 Твои покупки</h3>
+        <div id="cartItems">
+            <div class="cart-empty">Пока пусто...<br>Выбери что-нибудь 🍁</div>
+        </div>
+        <div class="cart-total" id="cartTotal" style="display:none;"></div>
+        <button class="checkout-btn" id="checkoutBtn" disabled>Завершить покупки 🎫</button>
+    </div>
+
     <header>
-        <h1>🍁 Октябрь для тебя 🍁</h1>
-        <p>Самый тёплый месяц этой осени</p>
+        <h1>🍁 Вета, эта осень для тебя 🍁</h1>
     </header>
 
-    <!-- ФОТОГРАФИИ: файлы photo1.jpg, photo2.jpg, photo3.jpg должны лежать рядом с index.html -->
+    <!-- ФОТОГРАФИИ (5 штук)
+         Порядок изменён для симметрии:
+         Ряд 1: фото1 | фото5 (женой) | фото2
+         Ряд 2: фото4 | фото3 (Люблю тебя) по центру -->
     <div class="gallery">
-        <div class="photo photo-1">
+        <div class="photo" onclick="openLightbox('photo1.jpg')">
             <img src="photo1.jpg" alt="Мы вместе">
-            <div class="caption">Наше счастье ❤️</div>
+            <div class="caption">Моё счастье ❤️</div>
         </div>
-        <div class="photo photo-2">
+        <div class="photo" onclick="openLightbox('photo5.jpg')">
+            <img src="photo5.jpg" alt="Мы вместе">
+            <div class="caption">Она же будет моей женой</div>
+        </div>
+        <div class="photo" onclick="openLightbox('photo2.jpg')">
             <img src="photo2.jpg" alt="Мы вместе">
             <div class="caption">Тёплые моменты</div>
         </div>
-        <div class="photo photo-3">
+        <div class="photo" onclick="openLightbox('photo4.jpg')">
+            <img src="photo4.jpg" alt="Мы вместе">
+            <div class="caption">Мой мир</div>
+        </div>
+        <div class="photo" onclick="openLightbox('photo3.jpg')">
             <img src="photo3.jpg" alt="Мы вместе">
             <div class="caption">Люблю тебя</div>
         </div>
+    </div>
+
+    <!-- ЛАЙТБОКС -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+        <img id="lightboxImg" src="" alt="Фото">
     </div>
 
     <!-- МАГАЗИН ПОДАРКОВ -->
@@ -344,7 +811,7 @@
         </div>
     </div>
 
-    <!-- ЗАРАБОТОК БАЛЛОВ -->
+    <!-- ЗАРАБОТОК БАЛЛОВ (услуги) -->
     <div class="earn-section">
         <h2>💝 Как заработать баллы</h2>
         <ul class="earn-list" id="earnList">
@@ -352,30 +819,39 @@
         </ul>
     </div>
 
+    <!-- МОДАЛКА С БИЛЕТОМ -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="ticket" id="ticket">
+                <!-- Содержимое билета генерируется через JS -->
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn download" id="downloadBtn">📥 Скачать билет</button>
+                <button class="modal-btn close" id="closeBtn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <!-- УВЕДОМЛЕНИЕ -->
     <div class="toast" id="toast"></div>
 
     <script>
         // ================== ДАННЫЕ ==================
-        // Начальный баланс
         let balance = 10;
 
-        // Список подарков (название, цена)
         const gifts = [
-            { name: "ТГ Премиум (месяц)", price: 4 },
-            { name: "Дофаминовый букет", price: 7 },
-            { name: "Плед", price: 7 },
-            { name: "Мини-термос", price: 7 },
-            { name: "Милая грелка", price: 3 },
-            { name: "Тёплые носочки", price: 3 },
-            { name: "Шедевр кулинарии от Артёма", price: 10 },
-            { name: "Поездка за город", price: 8 },
-            { name: "Чайный набор", price: 5 },
-            { name: "Меховые тапочки (угги)", price: 5 }
+            { name: "ТГ Премиум (месяц)", price: 4, bought: false },
+            { name: "Дофаминовый букет", price: 7, bought: false },
+            { name: "Плед", price: 7, bought: false },
+            { name: "Мини-термос", price: 7, bought: false },
+            { name: "Милая грелка", price: 3, bought: false },
+            { name: "Тёплые носочки", price: 3, bought: false },
+            { name: "Шедевр кулинарии от Артёма", price: 10, bought: false },
+            { name: "Поездка за город", price: 8, bought: false },
+            { name: "Чайный набор", price: 5, bought: false },
+            { name: "Меховые тапочки (угги)", price: 5, bought: false }
         ];
 
-        // Список действий для заработка (название, цена, лимит)
-        // limit: null = неограниченно, число = сколько раз можно
         const earnActions = [
             { name: "Поцелуй", price: 1, limit: 3, used: 0 },
             { name: "Массаж 30 мин", price: 3, limit: null, used: 0 },
@@ -383,16 +859,26 @@
             { name: "Желание", price: 100, limit: 1, used: 0 }
         ];
 
+        let cart = [];
+
         // ================== ЛОГИКА ==================
 
-        // Обновление баланса на экране
         function updateBalance() {
             document.getElementById('balanceDisplay').textContent = balance;
-            // Обновляем доступность кнопок покупки
+
             document.querySelectorAll('.buy-btn').forEach((btn, index) => {
-                btn.disabled = gifts[index].price > balance;
+                const gift = gifts[index];
+                if (gift.bought) {
+                    btn.disabled = true;
+                    btn.textContent = 'Куплено ✅';
+                    btn.classList.add('bought');
+                } else {
+                    btn.disabled = gift.price > balance;
+                    btn.textContent = 'Купить';
+                    btn.classList.remove('bought');
+                }
             });
-            // Обновляем доступность кнопок заработка
+
             document.querySelectorAll('.earn-btn').forEach((btn, index) => {
                 const action = earnActions[index];
                 if (action.limit !== null && action.used >= action.limit) {
@@ -405,7 +891,6 @@
             });
         }
 
-        // Показать уведомление
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -413,7 +898,57 @@
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        // Отрисовка товаров
+        // ================== КОРЗИНА ==================
+        function updateCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            const badge = document.getElementById('cartBadge');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<div class="cart-empty">Пока пусто...<br>Выбери что-нибудь 🍁</div>';
+                cartTotal.style.display = 'none';
+                badge.style.display = 'none';
+                checkoutBtn.disabled = true;
+            } else {
+                cartItems.innerHTML = '';
+                let total = 0;
+                cart.forEach((item) => {
+                    total += item.price;
+                    const div = document.createElement('div');
+                    div.className = 'cart-item';
+                    const icon = item.type === 'gift' ? '🎁' : '💝';
+                    div.innerHTML = `
+                        <span class="cart-item-name">${icon} ${item.name}</span>
+                        <span class="cart-item-price">${item.price}б.</span>
+                    `;
+                    cartItems.appendChild(div);
+                });
+
+                cartTotal.style.display = 'block';
+                cartTotal.textContent = `Итого: ${total} баллов`;
+
+                badge.style.display = 'flex';
+                badge.textContent = cart.length;
+                checkoutBtn.disabled = false;
+            }
+        }
+
+        const cartEl = document.getElementById('cart');
+        const cartToggle = document.getElementById('cartToggle');
+        const cartHeader = document.getElementById('cartHeader');
+
+        cartHeader.addEventListener('click', () => {
+            cartEl.classList.add('collapsed');
+            cartToggle.classList.add('show');
+        });
+
+        cartToggle.addEventListener('click', () => {
+            cartEl.classList.remove('collapsed');
+            cartToggle.classList.remove('show');
+        });
+
+        // ================== ОТРИСОВКА ==================
         function renderGifts() {
             const grid = document.getElementById('itemsGrid');
             grid.innerHTML = '';
@@ -428,14 +963,19 @@
                 grid.appendChild(card);
             });
 
-            // Обработчики покупки
             document.querySelectorAll('.buy-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const index = e.target.dataset.index;
+                    const index = parseInt(e.target.dataset.index);
                     const gift = gifts[index];
+
+                    if (gift.bought) return;
+
                     if (balance >= gift.price) {
                         balance -= gift.price;
+                        gift.bought = true;
+                        cart.push({ name: gift.name, price: gift.price, type: 'gift' });
                         updateBalance();
+                        updateCart();
                         showToast(`🎉 Ты выбрала: ${gift.name}!`);
                     } else {
                         showToast('❌ Недостаточно баллов');
@@ -445,7 +985,6 @@
             updateBalance();
         }
 
-        // Отрисовка действий для заработка
         function renderEarnActions() {
             const list = document.getElementById('earnList');
             list.innerHTML = '';
@@ -464,41 +1003,238 @@
                 list.appendChild(li);
             });
 
-            // Обработчики заработка
             document.querySelectorAll('.earn-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const index = e.target.dataset.index;
+                    const index = parseInt(e.target.dataset.index);
                     const action = earnActions[index];
+
                     if (action.limit !== null && action.used >= action.limit) {
                         showToast('Это действие уже использовано');
                         return;
                     }
+
                     balance += action.price;
                     action.used++;
+                    cart.push({ name: action.name, price: action.price, type: 'service' });
                     updateBalance();
-                    renderEarnActions(); // Перерисовываем, чтобы обновить счетчики
+                    renderEarnActions();
+                    updateCart();
                     showToast(`+${action.price} баллов за "${action.name}"`);
                 });
             });
             updateBalance();
         }
 
+        // ================== БИЛЕТ ==================
+        function buildTicket() {
+            const ticket = document.getElementById('ticket');
+
+            if (cart.length === 0) {
+                ticket.innerHTML = '<div class="ticket-empty">Билет пуст 🍁</div>';
+                return;
+            }
+
+            const giftsInCart = cart.filter(item => item.type === 'gift');
+            const servicesInCart = cart.filter(item => item.type === 'service');
+
+            let total = 0;
+            cart.forEach(item => total += item.price);
+
+            let giftsHTML = '';
+            if (giftsInCart.length === 0) {
+                giftsHTML = '<div class="ticket-empty-line">— пусто —</div>';
+            } else {
+                giftsInCart.forEach(item => {
+                    giftsHTML += `
+                        <div class="ticket-item">
+                            <span class="t-name">🎁 ${item.name}</span>
+                            <span class="t-price">${item.price} б.</span>
+                        </div>
+                    `;
+                });
+            }
+
+            let servicesHTML = '';
+            if (servicesInCart.length === 0) {
+                servicesHTML = '<div class="ticket-empty-line">— пусто —</div>';
+            } else {
+                servicesInCart.forEach(item => {
+                    servicesHTML += `
+                        <div class="ticket-item">
+                            <span class="t-name">💝 ${item.name}</span>
+                            <span class="t-price">${item.price} б.</span>
+                        </div>
+                    `;
+                });
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ru-RU', {
+                day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            ticket.innerHTML = `
+                <div class="ticket-header">
+                    <h2>🍁 Осенний билет 🍁</h2>
+                    <p>Октябрь — месяц тёплых моментов</p>
+                </div>
+
+                <div class="ticket-section">
+                    <div class="ticket-section-title">🎁 Для Веты</div>
+                    <div class="ticket-items">
+                        ${giftsHTML}
+                    </div>
+                </div>
+
+                <div class="ticket-section">
+                    <div class="ticket-section-title">💝 Для Тёмы</div>
+                    <div class="ticket-items">
+                        ${servicesHTML}
+                    </div>
+                </div>
+
+                <div class="ticket-total">
+                    Итого: <span>${total} баллов</span>
+                </div>
+
+                <div class="ticket-footer">
+                    <span class="heart">❤️</span>
+                    С любовью, от Артёма<br>
+                    ${dateStr}
+                </div>
+            `;
+        }
+
+        // ================== МОДАЛКА ==================
+        const modalOverlay = document.getElementById('modalOverlay');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const closeBtn = document.getElementById('closeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                showToast('Корзина пуста 🍁');
+                return;
+            }
+            buildTicket();
+            modalOverlay.classList.add('show');
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('show');
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('show');
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const ticket = document.getElementById('ticket');
+            showToast('⏳ Готовим билет...');
+
+            html2canvas(ticket, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'osennyi-bilet.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('✅ Билет скачан!');
+            }).catch(err => {
+                console.error(err);
+                showToast('❌ Не удалось скачать билет');
+            });
+        });
+
+        // ================== ЛАЙТБОКС ==================
+        function openLightbox(src) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+            img.src = src;
+            lb.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lb = document.getElementById('lightbox');
+            lb.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // ================== БОКОВЫЕ ФОТО ПРИ СКРОЛЛЕ ==================
+        const sideLeft = document.getElementById('sideLeft');
+        const sideRight = document.getElementById('sideRight');
+
+        function handleScroll() {
+            // Как только пользователь прокрутил вниз больше 200px — показываем боковые фото
+            if (window.scrollY > 200) {
+                sideLeft.classList.add('show');
+                sideRight.classList.add('show');
+            } else {
+                sideLeft.classList.remove('show');
+                sideRight.classList.remove('show');
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll);
+
         // ================== МУЗЫКА ==================
         const music = document.getElementById('bgMusic');
         const musicBtn = document.getElementById('musicBtn');
         let isPlaying = false;
+        let autoplayBlocked = true;
 
-        musicBtn.addEventListener('click', () => {
+        window.addEventListener('load', () => {
+            music.volume = 0.6;
+            music.play().then(() => {
+                isPlaying = true;
+                autoplayBlocked = false;
+                musicBtn.textContent = 'Выключить музыку';
+                musicBtn.title = 'Выключить музыку';
+            }).catch(() => {
+                autoplayBlocked = true;
+            });
+        });
+
+        function startMusicOnFirstInteraction() {
+            if (!autoplayBlocked || isPlaying) return;
+            music.volume = 0.6;
+            music.play().then(() => {
+                isPlaying = true;
+                autoplayBlocked = false;
+                musicBtn.textContent = 'Выключить музыку';
+                musicBtn.title = 'Выключить музыку';
+            }).catch(e => console.log('Не удалось запустить:', e));
+            document.removeEventListener('click', startMusicOnFirstInteraction);
+            document.removeEventListener('touchstart', startMusicOnFirstInteraction);
+            document.removeEventListener('keydown', startMusicOnFirstInteraction);
+        }
+
+        document.addEventListener('click', startMusicOnFirstInteraction);
+        document.addEventListener('touchstart', startMusicOnFirstInteraction);
+        document.addEventListener('keydown', startMusicOnFirstInteraction);
+
+        musicBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (isPlaying) {
                 music.pause();
-                musicBtn.textContent = '🎵';
+                musicBtn.textContent = 'Включить музыку';
                 musicBtn.title = 'Включить музыку';
             } else {
                 music.play().catch(e => console.log('Ошибка воспроизведения:', e));
-                musicBtn.textContent = '🔇';
+                musicBtn.textContent = 'Выключить музыку';
                 musicBtn.title = 'Выключить музыку';
             }
             isPlaying = !isPlaying;
+            autoplayBlocked = false;
         });
 
         // ================== ПАДАЮЩИЕ ЛИСТЬЯ ==================
@@ -518,6 +1254,7 @@
         // ================== ИНИЦИАЛИЗАЦИЯ ==================
         renderGifts();
         renderEarnActions();
+        updateCart();
     </script>
 </body>
 </html>
